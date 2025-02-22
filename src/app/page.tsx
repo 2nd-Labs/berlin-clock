@@ -19,12 +19,12 @@ export default function Home() {
              Berlin Clock
            </h1>
         </div>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+        <div className="columns-1">
           <svg height="100" width="100" xmlns="http://www.w3.org/2000/svg">
             <circle r="45" cx="50" cy="50" fill={seconds % 2 == 0 ? "red" : "grey"} />
           </svg> 
         </div>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+        <div className="columns-4">
           {
             Array.from({length: 4}, (_, i) => {
               return <>
@@ -35,7 +35,7 @@ export default function Home() {
             })
           }
         </div>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+        <div className="columns-4">
           {
             Array.from({length: 4}, (_, i) => {
               return <>
@@ -46,7 +46,7 @@ export default function Home() {
             })
           }
         </div>
-        <div className="flex gap-14 items-center flex-col sm:flex-row">
+        <div className="columns-12 gap-12">
           {
             Array.from({length: 11}, (_, i) => {
               return <>
@@ -57,7 +57,7 @@ export default function Home() {
             })
           }
         </div>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+        <div className="columns-4">
           {
             Array.from({length: 4}, (_, i) => {
               return <>
