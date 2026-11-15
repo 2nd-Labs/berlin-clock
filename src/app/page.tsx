@@ -1,136 +1,100 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type { JSX } from "react";
+import { useEffect, useState } from "react";
 
-function useTime(): Date {
-  const [time, setTime] = useState(() => new Date());
+type ClockTime = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
+function getBerlinTime(date: Date): ClockTime {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Berlin",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 0);
+
+  return {
+    hours: value("hour"),
+    minutes: value("minute"),
+    seconds: value("second"),
+  };
+}
+
+function useTime(): Date | null {
+  const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
+    const updateTime = () => setTime(new Date());
+    updateTime();
+    const id = setInterval(updateTime, 1000);
     return () => clearInterval(id);
   }, []);
 
   return time;
 }
 
-export default function Home(): JSX.Element {
+function LampRow({
+  count,
+  active,
+  quarterHours = false,
+}: {
+  count: number;
+  active: number;
+  quarterHours?: boolean;
+}) {
+  return (
+    <div className="clock-row" aria-hidden="true">
+      {Array.from({ length: count }, (_, index) => {
+        const isLit = index < active;
+        const isQuarterHour = quarterHours && (index + 1) % 3 === 0;
+        const color = isLit ? (isQuarterHour ? "red" : "yellow") : "off";
+
+        return <span className={`lamp lamp-${color}`} key={index} />;
+      })}
+    </div>
+  );
+}
+
+export default function Home() {
   const now = useTime();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
+  const { hours, minutes, seconds } = now
+    ? getBerlinTime(now)
+    : { hours: 0, minutes: 0, seconds: 0 };
+  const timeLabel = now
+    ? [hours, minutes, seconds]
+        .map((part) => String(part).padStart(2, "0"))
+        .join(":")
+    : "--:--:--";
 
   return (
-    <main className="flex flex-col gap-6 items-center">
-      <div className="columns-1">
-        <h1 className="text-6xl font-bold text-gray-400">Berlin Clock</h1>
-      </div>
-      <div className="columns-1">
-        <svg height="100" width="100" xmlns="http://www.w3.org/2000/svg">
-          <circle
-            r="45"
-            cx="50"
-            cy="50"
-            fill={seconds % 2 == 0 ? "red" : "grey"}
-          />
-        </svg>
-      </div>
-      <div className="columns-4">
-        {Array.from({ length: 4 }, (_, i) => {
-          return (
-            <svg
-              width="300"
-              height="130"
-              xmlns="http://www.w3.org/2000/svg"
-              key={i}
-            >
-              <rect
-                width="200"
-                height="100"
-                x="10"
-                y="10"
-                rx="20"
-                ry="20"
-                fill={Math.floor(hours / 5) / (i + 1) >= 1 ? "yellow" : "grey"}
-              />
-            </svg>
-          );
-        })}
-      </div>
-      <div className="columns-4">
-        {Array.from({ length: 4 }, (_, i) => {
-          return (
-            <svg
-              width="300"
-              height="130"
-              xmlns="http://www.w3.org/2000/svg"
-              key={i}
-            >
-              <rect
-                width="200"
-                height="100"
-                x="10"
-                y="10"
-                rx="20"
-                ry="20"
-                fill={(hours % 5) / (i + 1) >= 1 ? "yellow" : "grey"}
-              />
-            </svg>
-          );
-        })}
-      </div>
-      <div className="columns-12 gap-12">
-        {Array.from({ length: 11 }, (_, i) => {
-          return (
-            <svg
-              width="50"
-              height="130"
-              xmlns="http://www.w3.org/2000/svg"
-              key={i}
-            >
-              <rect
-                width="50"
-                height="100"
-                x="1"
-                y="1"
-                rx="10"
-                ry="10"
-                fill={
-                  Math.floor(minutes / 5) / (i + 1) >= 1
-                    ? (i + 1) % 3 == 0
-                      ? "red"
-                      : "yellow"
-                    : "grey"
-                }
-              />
-            </svg>
-          );
-        })}
-      </div>
-      <div className="columns-4">
-        {Array.from({ length: 4 }, (_, i) => {
-          return (
-            <svg
-              width="300"
-              height="130"
-              xmlns="http://www.w3.org/2000/svg"
-              key={i}
-            >
-              <rect
-                width="200"
-                height="100"
-                x="10"
-                y="10"
-                rx="20"
-                ry="20"
-                fill={(minutes % 5) / (i + 1) >= 1 ? "yellow" : "grey"}
-              />
-            </svg>
-          );
-        })}
-      </div>
+    <main className="clock-page">
+      <h1>Berlin-Uhr</h1>
+      <p className="clock-description">
+        Die Weltzeituhr am Alexanderplatz, dargestellt als Lichtreihen
+      </p>
+      <section
+        className="clock"
+        role="img"
+        aria-label={`Berlin-Uhr, ${timeLabel} Uhr`}
+      >
+        <div
+          className={`seconds-lamp ${seconds % 2 === 0 && now ? "seconds-on" : ""}`}
+        />
+        <LampRow count={4} active={Math.floor(hours / 5)} />
+        <LampRow count={4} active={hours % 5} />
+        <LampRow count={11} active={Math.floor(minutes / 5)} quarterHours />
+        <LampRow count={4} active={minutes % 5} />
+      </section>
+      <time className="digital-time" aria-live="off">
+        {timeLabel}
+      </time>
+      <p className="timezone">Europe/Berlin</p>
     </main>
   );
 }
