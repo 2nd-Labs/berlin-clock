@@ -74,9 +74,9 @@ export default function Home() {
 
   return (
     <main className="clock-page">
-      <h1>Berlin-Uhr</h1>
+      <h1>Berlin-Clock</h1>
       <p className="clock-description">
-        Die Weltzeituhr am Alexanderplatz, dargestellt als Lichtreihen
+        The World Clock, depicted as light patterns
       </p>
       <section
         className="clock"
